@@ -1,0 +1,29 @@
+body {
+    background: linear-gradient(to right, rgb(19, 106, 138), rgb(38, 120, 113));
+}
+
+.div-botoes {
+    margin-top: 150px;
+    margin-bottom: 150px;
+}
+
+.div-botoes button {
+    font-size: 1.2em;
+}
+
+.table {
+    font-size: 1em;
+}
+
+h1 {
+    font-size: 2em;
+    margin: 50px 5% 50px 5%;
+    text-align: center;
+}
+
+h2 {
+    font-size: 1.5em;
+    text-align: justify;
+    text-align-last: center;
+    margin: 0 5% 50px 5%;
+}

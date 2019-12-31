@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=0.7">
+    <script src="js/vue.min.js"></script>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Relatório de Vendas</title>
+</head>
+
+<body>
+
+    <div id="app">
+        <div class="container text-white">
+            <h1>{{ title }}</h1><br>
+
+            <h2>. Soma total de vendas por produto e soma total de todas as vendas </h2>
+
+
+            <table class="table table-striped" v-if="salesByProduct">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr v-for="(sale, index) in salesByProduct">
+                        <td>#{{ index + 1 }}</td>
+                        <td>{{ sale.name }}</td>
+                        <td v-money="'R$'">{{ sale.value }}</td>
+                    </tr>
+                </tbody>
+
+                <tfoot>
+                    <tr>
+                        <td>+</td>
+                        <td>Total</td>
+                        <td v-money="'R$'">{{ calculateTotal(salesByProduct) }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+            <br>
+
+            <!-- ÁREA COM A LISTA PURA DE TODAS AS VENDAS (primeira parte do projeto) -->
+
+            <h2>. Todas as vendas com seus respectivos preços, quantidade e data ({{ contador }} de 1000 itens) </h2>
+
+
+            <table class="table table-striped">
+                <thead class="thead-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>Qtde</th>
+                        <th>Data</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr v-for="sale in sales" v-if="sale.id <= contador">
+                        <td>{{ sale.id }}</td>
+                        <td>{{ sale.name }}</td>
+                        <td v-money="'R$'">{{ sale.price }}</td>
+                        <td>{{ sale.qtde }}</td>
+                        <td>{{ sale.date }}</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+
+            <div class="d-flex justify-content-center div-botoes">
+                <button v-if="contador < 1000" class="btn btn-outline-light" @click="contador += 10">Abrir mais
+                    10</button>
+
+                <button v-if="contador >= 10" class="ml-5 btn btn-outline-light" @click="contador -= 10">Fechar 10</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Obs: componentUpdated = quando o elemento vai ficar sendo atualizado | inserted = quando o elemento for inserido (uma vez)
+
+        Vue.directive('money', {
+            inserted(el, binding) {
+                const amount = parseFloat(el.innerHTML).toFixed(2)
+                    .replace('.', ',')
+                    .replace(/(\d)(?=(\d{3})+\,)/g, '$1.')
+
+                el.innerHTML = `${binding.value} ${amount}`
+            }
+        })
+
+        new Vue({
+            el: "#app",
+            data: {
+                title: "Relatório de Vendas",
+                sales: null,
+                contador: 10
+            },
+            methods: {
+                // Obter via AJAX as vendas
+                getSales() {
+                    fetch('/data/sales.json')
+                        .then(resp => resp.json() /*console.log(resp)*/)
+                        .then(data => this.sales = data)
+                },
+
+                // Somar TODAS as vendas
+                calculateTotal(sales) {
+                    if (!sales) return 0
+
+                    return sales.reduce((total, sale) => total + sale.value
+                        , 0)
+                },
+            },
+            computed: {
+                // Agrupar e somar as vendas da cada produto (todas as calculadoras, todas as lapiseiras...)
+
+                salesByProduct() {
+                    if (!this.sales) return null
+
+                    const salesByProduct = this.sales.reduce((grouped, sale) => {
+                        if (!grouped.hasOwnProperty(sale.name)) {
+                            grouped[sale.name] = {
+                                name: sale.name,
+                                value: sale.price * sale.qtde
+                            }
+                            return grouped
+                        }
+
+                        grouped[sale.name].value += sale.price * sale.qtde
+                        return grouped
+
+                    }, {})
+
+                    return Object.values(salesByProduct)
+                }
+            },
+
+            // função que é chamada quando a instância estiver pronta (el: "#app") obs: a própria instância do Vue, aqui mesmo, mesmo com o template ainda não definido no HTML
+            mounted() {
+                this.getSales()
+            }
+        })
+
+    </script>
+</body>
+
+</html>
